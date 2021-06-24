@@ -1,4 +1,6 @@
 # PeopleBehindDetector
+[![Pylint](https://github.com/NetherQuartz/PeopleBehindDetector/actions/workflows/pylint.yml/badge.svg)](https://github.com/NetherQuartz/PeopleBehindDetector/actions/workflows/pylint.yml)
+
 Итоговый проект первого семестра Deep Learning School — веб-приложение для обнаружения людей, стоящих позади пользователя.
 
 ## :bookmark_tabs: План выполнения
