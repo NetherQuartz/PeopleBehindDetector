@@ -1,10 +1,12 @@
 """The app"""
 
 import logging
+
+from pickle import UnpicklingError
+
 import torch
 import streamlit as st
 
-from pickle import UnpicklingError
 from torchvision.models.detection import ssdlite320_mobilenet_v3_large
 from torchvision.transforms import ToTensor
 from PIL import Image
@@ -27,6 +29,7 @@ WEBRTC_CLIENT_SETTINGS = ClientSettings(
 WEIGHTS_PATH = "weights.pth"
 
 TO_TENSOR = ToTensor()
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def detection_page(model):
@@ -57,6 +60,7 @@ def try_page(model):
         for file in files:
             st.image(file.getvalue())
             image = TO_TENSOR(Image.open(file))[:3, :, :]
+            image = image.to(DEVICE)
             images.append(image)
             logging.info(images[-1].shape)
 
@@ -82,9 +86,8 @@ def init_model():
 
     model.eval()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    logging.info(f"Device: {device}")
-    model = model.to(device)
+    logging.info("Device: %s", DEVICE)
+    model = model.to(DEVICE)
 
     return model
 
