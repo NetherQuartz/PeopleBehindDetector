@@ -49,6 +49,11 @@ def try_page(model):
     """Code of the page with tryout"""
 
     st.title("Try out the model :sparkler:")
+    threshold = st.sidebar.slider(label="Threshold",
+                                  min_value = 0.,
+                                  max_value=1.,
+                                  value=0.5,
+                                  step=0.01)
 
     files = st.file_uploader(label="Upload images",
                              type=["png", "jpg", "jpeg"],
@@ -79,15 +84,14 @@ def try_page(model):
 
                 draw = ImageDraw.Draw(image)
                 for j, box in enumerate(boxes):
-                    if scores[j] < 0.5:
+                    if scores[j] < threshold:
                         continue
 
-                    left, bottom, right, top = box
-                    xywh = left, bottom, right - left, top - bottom
-
-                    draw.rectangle(xywh, outline="#FF0000", width=2)
+                    x1, y1, x2, y2 = box
+                    
+                    draw.rectangle((x1, y1, x2, y2), outline="#FF0000", width=5)
                 st.image(image)
-                st.text(str(image))
+                st.text(str(image.size))
 
         logging.info(len(prediction))
 
