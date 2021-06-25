@@ -89,7 +89,12 @@ def try_page(model):
 
                     x1, y1, x2, y2 = box
                     
-                    draw.rectangle((x1, y1, x2, y2), outline="#FF0000", width=5)
+                    draw.rectangle(xy=(x1, y1, x2, y2),
+                                   outline="#FF0000",
+                                   width=5)
+
+                    draw.text((x1 + 5, y1 + 5), f"{scores[j] * 100:.3f}%", "#FF0000")
+                    
                 st.image(image)
                 st.text(str(image.size))
 
