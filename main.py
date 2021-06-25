@@ -9,7 +9,7 @@ import streamlit as st
 
 from torchvision.models.detection import ssdlite320_mobilenet_v3_large
 from torchvision.transforms import ToTensor
-from PIL import Image
+from PIL import Image, ImageDraw
 from streamlit_webrtc import ClientSettings, WebRtcMode, webrtc_streamer
 
 WEBRTC_CLIENT_SETTINGS = ClientSettings(
@@ -54,21 +54,42 @@ def try_page(model):
                              type=["png", "jpg", "jpeg"],
                              accept_multiple_files=True)
 
+    image_tensors = []
     images = []
 
     if len(files) > 0:
         for file in files:
-            st.image(file.getvalue())
-            image = TO_TENSOR(Image.open(file))[:3, :, :]
-            image = image.to(DEVICE)
+            image = Image.open(file).convert("RGB").copy()
             images.append(image)
-            logging.info(images[-1].shape)
+            tensor = TO_TENSOR(image).to(DEVICE)
+            image_tensors.append(tensor)
+            logging.info(tensor.shape)
 
         with st.spinner("Processing images…"):
             with torch.no_grad():
-                ans = model(images)
+                prediction = model(image_tensors)
 
-        logging.info(len(ans))
+            for i, image in enumerate(images):
+
+                labels = prediction[i]["labels"]
+                criterion = labels == 1  # 1 — person
+
+                boxes = prediction[i]["boxes"][criterion]
+                scores = prediction[i]["scores"][criterion]
+
+                draw = ImageDraw.Draw(image)
+                for j, box in enumerate(boxes):
+                    if scores[j] < 0.5:
+                        continue
+
+                    left, bottom, right, top = box
+                    xywh = left, bottom, right - left, top - bottom
+
+                    draw.rectangle(xywh, outline="#FF0000", width=2)
+                st.image(image)
+                st.text(str(image))
+
+        logging.info(len(prediction))
 
 
 @st.cache
