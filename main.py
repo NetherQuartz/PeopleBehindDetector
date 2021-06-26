@@ -28,6 +28,8 @@ WEBRTC_CLIENT_SETTINGS = ClientSettings(
 
 WEIGHTS_PATH = "weights.pth"
 
+IMG_WIDTH = 600
+
 TO_TENSOR = ToTensor()
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -45,18 +47,35 @@ def detection_page(model):
     )
 
 
+def draw_box(draw, box, score):
+    """Draws red box with score on an ImageDraw"""
+
+    x1, y1, x2, y2 = box
+
+    # the box
+    draw.rectangle(xy=(x1, y1, x2, y2),
+                   outline="#FF0000",
+                   width=2)
+
+    # text background
+    draw.rectangle(xy=(x1, y2, x2, y2 - 13),
+                   fill="#FF000000")
+
+    draw.text((x1 + 5, y2 - 12), f"{score * 100:.3f}%", "#FFFFFF")  # text
+
+
 def try_page(model):
     """Code of the page with tryout"""
 
     st.title("Try out the model :sparkler:")
     threshold = st.sidebar.slider(label="Threshold",
-                                  min_value = 0.,
+                                  min_value=0.,
                                   max_value=1.,
                                   value=0.5,
                                   step=0.01)
 
     files = st.file_uploader(label="Upload images",
-                             type=["png", "jpg", "jpeg"],
+                             type=["png", "jpg", "jpeg", "webp"],
                              accept_multiple_files=True)
 
     image_tensors = []
@@ -65,6 +84,7 @@ def try_page(model):
     if len(files) > 0:
         for file in files:
             image = Image.open(file).convert("RGB").copy()
+            image = image.resize((IMG_WIDTH, int(image.size[1] / image.size[0] * IMG_WIDTH)))
             images.append(image)
             tensor = TO_TENSOR(image).to(DEVICE)
             image_tensors.append(tensor)
@@ -86,19 +106,12 @@ def try_page(model):
                 for j, box in enumerate(boxes):
                     if scores[j] < threshold:
                         continue
-
-                    x1, y1, x2, y2 = box
                     
-                    draw.rectangle(xy=(x1, y1, x2, y2),
-                                   outline="#FF0000",
-                                   width=5)
-
-                    draw.text((x1 + 5, y1 + 5), f"{scores[j] * 100:.3f}%", "#FF0000")
+                    draw_box(draw, box, scores[j])
                     
                 st.image(image)
-                st.text(str(image.size))
 
-        logging.info(len(prediction))
+        logging.info("Processed %d images", len(prediction))
 
 
 @st.cache
