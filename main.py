@@ -88,7 +88,7 @@ def try_page(model):
             images.append(image)
             tensor = TO_TENSOR(image).to(DEVICE)
             image_tensors.append(tensor)
-            logging.info(tensor.shape)
+            logging.info("Got tensor %s", tensor.shape)
 
         with st.spinner("Processing images…"):
             with torch.no_grad():
@@ -119,13 +119,17 @@ def init_model():
     """Initializes and returns the model"""
 
     try:
+        logging.info("Trying to load weights from %s", WEIGHTS_PATH)
         model = ssdlite320_mobilenet_v3_large(pretrained=False)
         weights = torch.load(WEIGHTS_PATH)
         model.load_state_dict(weights)
+        logging.info("Weights loaded from file %s", WEIGHTS_PATH)
 
     except (FileNotFoundError, UnpicklingError) as _:
+        logging.info("Failed to load weights, downloading from the internet")
         model = ssdlite320_mobilenet_v3_large(pretrained=True)
         torch.save(model.state_dict(), WEIGHTS_PATH)
+        logging.info("Weights downloaded and saved to %s", WEIGHTS_PATH)
 
     model.eval()
 
