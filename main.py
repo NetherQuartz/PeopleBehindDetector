@@ -4,13 +4,15 @@ import logging
 
 from pickle import UnpicklingError
 
+import numpy as np
 import torch
 import streamlit as st
 
 from torchvision.models.detection import ssdlite320_mobilenet_v3_large
 from torchvision.transforms import ToTensor
 from PIL import Image, ImageDraw
-from streamlit_webrtc import ClientSettings, WebRtcMode, webrtc_streamer
+from streamlit_webrtc import ClientSettings, WebRtcMode, webrtc_streamer, VideoProcessorBase
+from av.video.frame import VideoFrame
 
 WEBRTC_CLIENT_SETTINGS = ClientSettings(
     rtc_configuration={
@@ -34,19 +36,6 @@ TO_TENSOR = ToTensor()
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def detection_page(model):
-    """Code of the page with detection on webcam image"""
-
-    st.title("Say cheese! :camera:")
-
-    webrtc_streamer(
-        key="loopback",
-        mode=WebRtcMode.SENDRECV,
-        client_settings=WEBRTC_CLIENT_SETTINGS,
-        video_processor_factory=None
-    )
-
-
 def draw_box(draw, box, score):
     """Draws red box with score on an ImageDraw"""
 
@@ -62,6 +51,52 @@ def draw_box(draw, box, score):
                    fill="#FF000000")
 
     draw.text((x_1 + 5, y_2 - 12), f"{score * 100:.3f}%", "#FFFFFF")  # text
+
+
+def detection_page(model):
+    """Code of the page with detection on webcam image"""
+
+    st.title("Say cheese! :camera:")
+
+    threshold = st.sidebar.slider(label="Threshold",
+                                  min_value=0.,
+                                  max_value=1.,
+                                  value=0.5,
+                                  step=0.01)
+
+    class VideoProcessor(VideoProcessorBase):
+
+        def transform(self, frame: VideoFrame) -> np.ndarray:
+            pass
+
+        def recv(self, frame: VideoFrame) -> VideoFrame:
+            image = frame.to_image()
+            tensor = TO_TENSOR(image).to(DEVICE)
+
+            with torch.no_grad():
+                prediction = model([tensor])
+
+            criterion = prediction[0]["labels"] == 1  # 1 — person
+
+            boxes = prediction[0]["boxes"][criterion]
+            scores = prediction[0]["scores"][criterion]
+
+            draw = ImageDraw.Draw(image)
+            for j, box in enumerate(boxes):
+                if scores[j] < threshold:
+                    continue
+
+                draw_box(draw, box, scores[j])
+
+            return VideoFrame.from_image(image)
+
+    webrtc_streamer(
+        key="detection-filter",
+        mode=WebRtcMode.SENDRECV,
+        client_settings=WEBRTC_CLIENT_SETTINGS,
+        video_processor_factory=VideoProcessor,
+        async_processing=True,
+    )
 
 
 def try_page(model):
