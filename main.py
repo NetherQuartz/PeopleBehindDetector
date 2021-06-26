@@ -50,18 +50,18 @@ def detection_page(model):
 def draw_box(draw, box, score):
     """Draws red box with score on an ImageDraw"""
 
-    x1, y1, x2, y2 = box
+    x_1, y_1, x_2, y_2 = box
 
     # the box
-    draw.rectangle(xy=(x1, y1, x2, y2),
+    draw.rectangle(xy=(x_1, y_1, x_2, y_2),
                    outline="#FF0000",
                    width=2)
 
     # text background
-    draw.rectangle(xy=(x1, y2, x2, y2 - 13),
+    draw.rectangle(xy=(x_1, y_2, x_2, y_2 - 13),
                    fill="#FF000000")
 
-    draw.text((x1 + 5, y2 - 12), f"{score * 100:.3f}%", "#FFFFFF")  # text
+    draw.text((x_1 + 5, y_2 - 12), f"{score * 100:.3f}%", "#FFFFFF")  # text
 
 
 def try_page(model):
@@ -86,9 +86,10 @@ def try_page(model):
             image = Image.open(file).convert("RGB").copy()
             image = image.resize((IMG_WIDTH, int(image.size[1] / image.size[0] * IMG_WIDTH)))
             images.append(image)
-            tensor = TO_TENSOR(image).to(DEVICE)
-            image_tensors.append(tensor)
-            logging.info("Got tensor %s", tensor.shape)
+
+            image = TO_TENSOR(image).to(DEVICE)
+            image_tensors.append(image)
+            logging.info("Got tensor %s", image.shape)
 
         with st.spinner("Processing images…"):
             with torch.no_grad():
@@ -96,8 +97,7 @@ def try_page(model):
 
             for i, image in enumerate(images):
 
-                labels = prediction[i]["labels"]
-                criterion = labels == 1  # 1 — person
+                criterion = prediction[i]["labels"] == 1  # 1 — person
 
                 boxes = prediction[i]["boxes"][criterion]
                 scores = prediction[i]["scores"][criterion]
@@ -106,9 +106,9 @@ def try_page(model):
                 for j, box in enumerate(boxes):
                     if scores[j] < threshold:
                         continue
-                    
+
                     draw_box(draw, box, scores[j])
-                    
+
                 st.image(image)
 
         logging.info("Processed %d images", len(prediction))
