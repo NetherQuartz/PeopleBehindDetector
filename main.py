@@ -31,6 +31,7 @@ WEBRTC_CLIENT_SETTINGS = ClientSettings(
 WEIGHTS_PATH = "weights.pth"
 
 IMG_WIDTH = 600
+DEFAULT_THRESHOLD = 0.5
 
 TO_TENSOR = ToTensor()
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -58,13 +59,9 @@ def detection_page(model):
 
     st.title("Say cheese! :camera:")
 
-    threshold = st.sidebar.slider(label="Threshold",
-                                  min_value=0.,
-                                  max_value=1.,
-                                  value=0.5,
-                                  step=0.01)
-
     class VideoProcessor(VideoProcessorBase):
+
+        threshold = DEFAULT_THRESHOLD
 
         def transform(self, frame: VideoFrame) -> np.ndarray:
             pass
@@ -83,20 +80,26 @@ def detection_page(model):
 
             draw = ImageDraw.Draw(image)
             for j, box in enumerate(boxes):
-                if scores[j] < threshold:
+                if scores[j] < self.threshold:
                     continue
 
                 draw_box(draw, box, scores[j])
 
             return VideoFrame.from_image(image)
 
-    webrtc_streamer(
-        key="detection-filter",
-        mode=WebRtcMode.SENDRECV,
-        client_settings=WEBRTC_CLIENT_SETTINGS,
-        video_processor_factory=VideoProcessor,
-        async_processing=True,
-    )
+    ctx = webrtc_streamer(key="detection-filter",
+                          mode=WebRtcMode.SENDRECV,
+                          client_settings=WEBRTC_CLIENT_SETTINGS,
+                          video_processor_factory=VideoProcessor,
+                          async_processing=False)
+
+    if ctx.video_processor is not None:
+        threshold = st.sidebar.slider(label="Threshold",
+                                      min_value=0.,
+                                      max_value=1.,
+                                      value=DEFAULT_THRESHOLD,
+                                      step=0.01)
+        ctx.video_processor.threshold = threshold
 
 
 def try_page(model):
@@ -106,7 +109,7 @@ def try_page(model):
     threshold = st.sidebar.slider(label="Threshold",
                                   min_value=0.,
                                   max_value=1.,
-                                  value=0.5,
+                                  value=DEFAULT_THRESHOLD,
                                   step=0.01)
 
     files = st.file_uploader(label="Upload images",
