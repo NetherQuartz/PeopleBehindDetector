@@ -208,11 +208,46 @@ def init_model():
     return model
 
 
+def put_copyright():
+    """Shows information about repository and author"""
+
+    styles = """<style>
+    a:link , a:visited{
+    color: blue;
+    background-color: transparent;
+    text-decoration: underline;
+    }
+
+    a:hover,  a:active {
+    color: red;
+    background-color: transparent;
+    text-decoration: underline;
+    }
+
+    .footer {
+    position: fixed;
+    bottom: 0;
+    color: black;
+    text-align: left;
+    }
+    </style>
+    """
+    footer = """
+    <div class="footer">
+    <p>Developed with ❤️ by <a href="https://larkin.one" target="new">Vladimir Lar'kin</a><br />
+    See this app's <a href="https://github.com/NetherQuartz/PeopleBehindDetector" target="new">GitHub repo</a></p>
+    </div>"""
+    st.sidebar.write(styles, unsafe_allow_html=True)
+    st.sidebar.write(footer, unsafe_allow_html=True)
+
+
 def main():
     """The program entry point"""
 
     st.set_page_config(page_title="People Behind Detector", page_icon=":mag:")
     st.sidebar.title("Let's detect 'em all!")
+
+    put_copyright()
 
     mode = st.sidebar.selectbox(label="Choose a mode",
                                 options=["Webcam detection", "Model tryout"])
