@@ -23,3 +23,18 @@
 Демо доступно на [Heroku](https://people-behind-detector.herokuapp.com/) и [Streamlit Sharing](https://share.streamlit.io/netherquartz/peoplebehinddetector/main/main.py). Прошу иметь в виду, что из-за сильной задержки вебкамера может не работать или работать не так, как ожидается. В этом случае рекомендую запустить приложение локально.
 
 ## Локальный запуск
+1. Установите Python 3.8
+2. Склонируйте проект: `git clone https://github.com/NetherQuartz/PeopleBehindDetector.git`
+### Вариант 1. Poetry
+```Bash
+$ pip3 install poetry
+$ poetry install
+$ ./run.sh
+```
+
+### Вариант 2. requirements.txt
+```Bash
+$ pip install -r requirements.txt
+$ streamlit run main.py
+```
+![demo](demo.gif)
