@@ -108,14 +108,27 @@ def detection_page(model):
         ctx.video_processor.threshold = threshold
 
     if ctx.state.playing:
-        count_placeholder = st.sidebar.empty()
+        message_placeholder = st.sidebar.empty()
+        show_count = st.checkbox("Show number of people")
+        count_placeholder = st.empty()
         while True:
             if ctx.video_processor is not None:
                 try:
                     result = ctx.video_processor.result_queue.get(timeout=.5)
                 except queue.Empty:
-                    result = None
-                count_placeholder.text(f"Found {result} people")
+                    continue
+
+                if result == 0:
+                    message_placeholder.markdown("Where are you? :confused:")
+                elif result == 1:
+                    message_placeholder.markdown("You're alone and safe :ok_hand:")
+                elif result == 2:
+                    message_placeholder.markdown("There is someone behind you! :cold_sweat:")
+                elif result > 2:
+                    message_placeholder.markdown("They're right behind you! :scream:")
+
+                if show_count:
+                    count_placeholder.text(f"Number of people: {result}")
             else:
                 break
 
