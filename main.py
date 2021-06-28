@@ -69,7 +69,7 @@ def detection_page(model):
             pass
 
         def recv(self, frame: VideoFrame) -> VideoFrame:
-            image = frame.to_image()
+            image = frame.to_image().transpose(Image.FLIP_LEFT_RIGHT)
             tensor = TO_TENSOR(image).to(DEVICE)
 
             with torch.no_grad():
