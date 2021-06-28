@@ -1,6 +1,7 @@
 """The app"""
 
 import logging
+import queue
 
 from pickle import UnpicklingError
 
@@ -62,6 +63,7 @@ def detection_page(model):
     class VideoProcessor(VideoProcessorBase):
 
         threshold = DEFAULT_THRESHOLD
+        result_queue = queue.Queue()
 
         def transform(self, frame: VideoFrame) -> np.ndarray:
             pass
@@ -79,19 +81,22 @@ def detection_page(model):
             scores = prediction[0]["scores"][criterion]
 
             draw = ImageDraw.Draw(image)
+            people = 0
             for j, box in enumerate(boxes):
                 if scores[j] < self.threshold:
                     continue
 
+                people += 1
                 draw_box(draw, box, scores[j])
 
+            self.result_queue.put(people)
             return VideoFrame.from_image(image)
 
     ctx = webrtc_streamer(key="detection-filter",
                           mode=WebRtcMode.SENDRECV,
                           client_settings=WEBRTC_CLIENT_SETTINGS,
                           video_processor_factory=VideoProcessor,
-                          async_processing=False)
+                          async_processing=True)
 
     if ctx.video_processor is not None:
         threshold = st.sidebar.slider(label="Threshold",
@@ -100,6 +105,18 @@ def detection_page(model):
                                       value=DEFAULT_THRESHOLD,
                                       step=0.01)
         ctx.video_processor.threshold = threshold
+
+    if ctx.state.playing:
+        count_placeholder = st.sidebar.empty()
+        while True:
+            if ctx.video_processor is not None:
+                try:
+                    result = ctx.video_processor.result_queue.get(timeout=.5)
+                except queue.Empty:
+                    result = None
+                count_placeholder.text(f"Found {result} people")
+            else:
+                break
 
 
 def try_page(model):
