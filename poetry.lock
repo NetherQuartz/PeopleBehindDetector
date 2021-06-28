@@ -1138,8 +1138,8 @@ notebook = ">=4.4.1"
 
 [metadata]
 lock-version = "1.1"
-python-versions = "3.8.10"
-content-hash = "05692442583045019e47ae50de41e6b6f6f4ebb9b496e5602346af7f5c469c7a"
+python-versions = "^3.8.5"
+content-hash = "5c87590ecbf3430269e7e629e7c85b295a3ff58d254dd99a5e2545374a2879c1"
 
 [metadata.files]
 aioice = [

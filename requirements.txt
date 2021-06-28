@@ -1,0 +1,7 @@
+-f https://download.pytorch.org/whl/torch_stable.html 
+torch==1.9.0+cpu 
+-f https://download.pytorch.org/whl/torch_stable.html
+torchvision==0.10.0+cpu
+
+streamlit==0.83.0
+streamlit-webrtc==0.22.1
