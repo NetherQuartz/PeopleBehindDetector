@@ -61,6 +61,7 @@ def detection_page(model):
     st.title("Say cheese! :camera:")
 
     class VideoProcessor(VideoProcessorBase):
+        """Class to process frames from webcam"""
 
         threshold = DEFAULT_THRESHOLD
         result_queue = queue.Queue()
