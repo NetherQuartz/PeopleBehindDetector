@@ -5,7 +5,7 @@ description = "Detects people behind the user using neural network"
 authors = ["Vladimir Lar'kin <vladimir@larkin.one>"]
 
 [tool.poetry.dependencies]
-python = "^3.8.5"
+python = "3.8.5"
 streamlit = "^0.83.0"
 streamlit-webrtc = "^0.22.1"
 torch = "^1.9.0"
